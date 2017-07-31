@@ -8,6 +8,14 @@ public class UserInput : MonoBehaviour
     public float aimingWeight; // camera
     public bool aim;            // camera
     public bool lookInCameraDirection;
+    public ParticleSystem particleSys;
+
+    //IK stuff
+    public Transform spine;
+    public float aimingZ = 213.46f;
+    public float aimingX = -65.93f;
+    public float aimingY = 20.1f;
+    public float point = 30f;
 
 
     private CharacterMovement charMove;
@@ -17,7 +25,10 @@ public class UserInput : MonoBehaviour
     private Vector3 lookPos;
 
 
+
     Animator anim;
+
+
 
 
 
@@ -100,9 +111,23 @@ public class UserInput : MonoBehaviour
 		charMove.Move(move, aim, lookPos);
 	}
 
-    private void LateUpdate()
+
+    private void Update()
     {
         aim = Input.GetButton("Aim"); //Input.GetMouseButton(1); // right mouse click to zoom in
+        if (aim)
+        {
+            if(Input.GetAxisRaw("Fire1") < 0) // right 3rd axis of joystick
+            {
+                anim.SetTrigger("Fire");
+                particleSys.Emit(1);
+            }
+        }
+    }
+
+
+    private void LateUpdate()
+    {
 
         aimingWeight = Mathf.MoveTowards(aimingWeight, (aim) ? 1f : 0f, Time.deltaTime * 5);
 
@@ -112,5 +137,16 @@ public class UserInput : MonoBehaviour
         Vector3 pos = Vector3.Lerp(normalState, aimingState, aimingWeight);
 
         cam.transform.localPosition = pos;
+
+        if (aim)
+        {
+            Vector3 eulerAngleOffset = Vector3.zero;
+            eulerAngleOffset = new Vector3(aimingX, aimingY, aimingZ);
+
+            Ray ray = new Ray(cam.position, cam.forward);
+            Vector3 lookPosition = ray.GetPoint(point);
+            spine.LookAt(lookPosition);
+            spine.Rotate(eulerAngleOffset, Space.Self);
+        }
     }
 }
